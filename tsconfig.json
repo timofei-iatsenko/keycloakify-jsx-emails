@@ -6,6 +6,11 @@
         "module": "ESNext",
         "skipLibCheck": true,
 
+      "allowJs": true,
+      "paths": {
+        "kc/*": ["./src/*"],
+        "@/*": ["./emails/*"]
+      },
         /* Bundler mode */
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
