@@ -1,6 +1,5 @@
 #!/usr/bin/env -S node --import @swc-node/register/esm-register
 
-/* eslint-disable no-console */
 import { render } from "jsx-email";
 import { promises as fs } from "node:fs";
 import path from "node:path";
