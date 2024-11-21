@@ -3,21 +3,22 @@
 </p>
 
 
-## How emails works in the Keycloak
+# Keycloak Email Workflow
 
-Keyclock is sending a multipart emails with HTML and PlainText simultaneously for better compatibility. 
-For that reason in the theme folder there ire `html/*.ftl` and `text/.*.ftl` templates. 
+## How Emails Work in Keycloak
 
-Mostly every template has a very simple structure, where there minimum markup and one call to `msg` i18n function. 
+Keycloak sends **multipart emails** containing both HTML and plain text versions simultaneously to ensure better compatibility across email clients. Email templates are stored in the theme folder under two directories: `html/*.ftl` for HTML templates and `text/*.ftl` for plain text ones.
+
+Most templates have a simple structure with minimal markup and a call to the `msg` internationalization function. Here’s an example:
 
 ```ftl
 <#import "template.ftl" as layout>
-  <@layout.emailLayout>
+<@layout.emailLayout>
   ${kcSanitize(msg("identityProviderLinkBodyHtml", identityProviderDisplayName, realmName, identityProviderContext.username, link, linkExpiration, linkExpirationFormatter(linkExpiration)))?no_esc}
 </@layout.emailLayout>
 ```
 
-The value for the `identityProviderLinkBodyHtml` message defined in the message bundle:
+The `identityProviderLinkBodyHtml` message is defined in the message bundle as follows:
 
 ```properties
 # src/email/messages/messages_en.properties
@@ -25,88 +26,81 @@ The value for the `identityProviderLinkBodyHtml` message defined in the message 
 identityProviderLinkBody=Someone wants to link your "{1}" account with "{0}" account of user {2} . If this was you, click the link below to link accounts\n\n{3}\n\nThis link will expire within {5}.\n\nIf you don''t want to link account, just ignore this message. If you link accounts, you will be able to login to {1} through {0}.
 identityProviderLinkBodyHtml=<p>Someone wants to link your <b>{1}</b> account with <b>{0}</b> account of user {2}. If this was you, click the link below to link accounts</p><p><a href="{3}">Link to confirm account linking</a></p><p>This link will expire within {5}.</p><p>If you don''t want to link account, just ignore this message. If you link accounts, you will be able to login to {1} through {0}.</p>
 ```
-There are two entries for each email template, one for the plain text one for the html. And as you can see there is the same content but one with the markup and onther is not. 
 
-This is suboptimal, because 
- - all markup is inside the translations and tightly coupled to it. imagine you want to add inline styles to those `<p>` element. So every change to markup should be ported to all languages.
- - There is a copy paste of message content between plainText and html
+Each email template requires two entries: one for plain text and another for HTML. The content is identical except for the markup, which leads to the following issues:
 
-I will refer to this points later with a soultions.
+1. **Markup duplication**: Styling, such as adding inline styles, must be updated across all language-specific versions of the HTML template.
+2. **Content duplication**: Plain text and HTML templates duplicate the same content, requiring manual synchronization.
 
-## How email templates are done in KeyCloackify
-You need to use 
+These limitations is adressed in this integration and will be covered later in this document.
+
+## Email Templates in Keycloakify
+
+To start working on the email themes you need run the following command:
 
 ```bash
 npx keycloakify initialize-email-theme
 ```
 
-command, which will create `/src/email` folder with all existing `ftl` templates. 
-Docs says you can remove templates you are not going to override, so we can have there only those templates we are going to style. 
+This creates a `/src/email` folder containing html and plain text templates `.ftl` for all known emails. You can remove templates that you don’t plan to override, keeping only those you intend to customize.
 
 ## How jsx-email integration works
 
-The Keycloak server obviously cannot execute JS and therefore our JSX templates. 
-Instead we use a pre-generation and compile our JSX templates into plain old html files.
+Since Keycloak server cannot execute JavaScript, we pre-generate email templates as HTML and write them into corresponding folders.
 
-This repo contain a script called `build-emails.ts` which is taking JSX templates from `./emails/templates` folder
-compile TS and JSX and then render the markup into Keycloakify `src/email/` folder. 
+The repository includes a `build-emails.ts` script that:
+1. **Compiles TypeScript and JSX templates** located in `./emails/templates`.
+2. **Renders the templates** into the Keycloakify `src/email/` folder.
 
-The script is doing 2 passes, one got the html, and second is for plain text, so we don't need to mainatain 2 versions manually
+### Dual Pass Rendering
+The script renders both HTML and plain text in separate passes, eliminating the need to manually maintain two versions:
 
 ```ts
-const html = await render(createElement(Template, { themeName, locale }), {
-  pretty: true,
-});
-
-const plainText = await render(createElement(Template, { themeName, locale }), {
-  plainText: true,
-  pretty: true,
-});
+const html = await render(createElement(Template, { themeName, locale }), { pretty: true });
+const plainText = await render(createElement(Template, { themeName, locale }), { plainText: true, pretty: true });
 ```
 
-The jsx-email library is smart enoughh to correctly render known elements as plain text, for example: 
+The `jsx-email` library intelligently handles plain text rendering. For example:
 
 ```jsx
-// input jsx
+// Input JSX
 <p>
-  <a href={exp('link')}>Link to e-mail address verification</a>
+  <a href={exp('link')}>Link to verify your email</a>
 </p>
 ```
 
-Html: 
-```html
-<p><a href="${kcSanitize(link)?no_esc}">Link to e-mail address verification</a></p>
-```
+Outputs:
 
-Plain Text:
-```
-Link to e-mail address verification ${kcSanitize(link)?no_esc}
-```
+- **HTML**:
+  ```html
+  <p><a href="${kcSanitize(link)?no_esc}">Link to verify your email</a></p>
+  ```
+- **Plain Text**:
+  ```
+  Link to verify your email ${kcSanitize(link)?no_esc}
+  ```
 
-As you can see, it kept the link, so functionality is preserved. 
+As you can see, it kept the link, so functionality is preserved.
 
-### Theming and I18N variants
+## Theming and I18N Variants
 
-Because Keycloak is not going to execute our JSX, we need to pregenerate every version of our 
-templates and point keycloack to the correct one. For that build script generates an "entry-point" file which looks like that:
+Since Keycloak doesn’t execute JSX, the build script pre-generates all `[locale, theme]` combinations. Templates are stored in `/html/{themeName}/{locale}/{templateName}.ftl`.
+
+The script generates an  entry-point file to select the appropriate template based on the `locale` and `xKeycloakify.themeName` variables:
 
 ```ftl
 <#switch locale>
-<#case "pseudo">
+  <#case "pseudo">
     <#include "./" + xKeycloakify.themeName + "/pseudo/email-verification.ftl">
     <#break>
   <#default>
-    <#include "./" + xKeycloakify.themeName + "/en/email-verification.ftl">  
+    <#include "./" + xKeycloakify.themeName + "/en/email-verification.ftl">
 </#switch>
 ```
 
-The script generates templates for the `[locale, theme]` parameters matrix and stores them in the separate folders `/html/{themeName}/{locale}/templateName.ftl`
+### JSX Props
 
-Then the `entrypoint` file picks correct version based on the `locale` and `xKeycloakify.themeName` variables available in the template. 
-
-#### JSX Side
-
-Every JSX template receive props:
+Each JSX template receives the following props:
 
 ```typescript
 export type EmailTemplateProps = {
@@ -115,23 +109,19 @@ export type EmailTemplateProps = {
 };
 ```
 
-So it's up to developer how to implement i18n or do a branching for the theme.
+This allows developers to implement their own internationalization or theme-specific logic.
 
-### I18n
+## Internationalization (I18N)
 
-Keycloack's way to i18n has many limitations which i described them above and it doesn't play well with a JSX-emails.
+Keycloak's I18N mechanism has limitations:
+- Markup must be embedded in translation strings, making it not possible to use JSX-Emails components.
 
-For example if i want to style  text, i have to use a `Text` component instead of `p`. `Text` component will give me a cross-platform styling, layouting and so on. 
+To address this, I use Lingui, a **JSX-first** internationalization library offering:
+- The `<Trans>` component for inline translation.
+- Tools for message extraction.
+- Robust integration with JSX.
 
-So using messages from the Keacoack's theme message bundle is not the way to go. I wanted to have JSX-based i18n solution. 
-
-However user can choose whatever solution for the i18n which suits his needs, i decided to use a Lingui. 
-
-- Beacuse it gives a JSX-First appoach with a `Trans` tag
-- it has tooling for extraction messages
-- and no less important - i'm the core maintainer of the Lingui project
-
-With a Lingui the email template is looks like that: 
+Here’s an example template using Lingui:
 
 ```tsx
 const { exp } = createVariablesHelper('email-verification.ftl')
@@ -159,29 +149,21 @@ export const Template = ({ locale }: EmailTemplateProps) => (
 )
 ```
 
-And it gives me the full functionality of JSX with little developer overhead for i18n. 
+## Freemarker Template Interoperability
 
-### Freemarker Templates interopability
+JSX templates use placeholders for variables like `username` or `link`. These placeholders are replaced by Keycloak’s Freemarker engine during email generation.
 
-Our JSX templates is not going to resolve the placeholders for the username or link to real values. For those we need to teach Keycloack server to execute a JS. 
-Instead we put a freemarker expressions which would be executed by keycloack on message send. 
-
-I created few simple helpers to write such expressions: 
+I created few helpers to write **type-safe** freeemarker expressions:
 
 ```ts
-const { exp } = createVariablesHelper('email-verification.ftl')
+const { exp } = createVariablesHelper('email-verification.ftl');
+exp('realmName'); // Valid
+exp('unknownName'); // Type Error
 ```
 
-Create a **typed** helper for the particulare email template, so the name of freemarker variables is typesafe:
+You can check `email-vars.ts` file, to see what variables are supported and how it's implemented.
 
-```ts
-exp('realmName'); // Ok!
-exp('randomName'); // Type Error!
-```
-
-You can check `email-vars.ts` file, to see what variables is supported and how it's implemented.
-
-I also created a helpers for the freemarker conditions: 
+Conditional rendering in Freemarker can also be expressed using `If` component:
 
 ```tsx
 <Fm.If condition={`${v('firstName')}?? && ${v('lastName')}??`}>
@@ -193,18 +175,18 @@ I also created a helpers for the freemarker conditions:
 </Fm.If>
 ```
 
-So user can write conditions with a full type safety and without messing with freemarker syntax inside the JSX text.
 
-# Usage guide for emails theming
+## Email Theming Usage Guide
 
-## To create a new template
+### Creating a New Template
+1. Add a new `.tsx` file to the `emails/templates` folder.
+2. Export a `Template` JSX component from the file.
 
-Just create a `tsx` file in the `emails/templates`. The module should exports `Template` JSX element. 
+### Available Commands
+- **`pnpm emails:build`**: Compiles JSX templates into Freemarker files in the `src/email/` folder.
+- **`pnpm emails:preview`**: Opens a  [preview server](https://jsx.email/docs/core/cli#preview) to test, iterate, and send templates.
+- **`pnpm emails:check`**: Validates templates against [Can I Email](https://www.caniemail.com/).
 
-## Commands
-- `pnpm emails:build` - build JSX templates into freemarker templates in the `src/email/` folder
-- `pnpm emails:preview` - opens the [preview server](https://jsx.email/docs/core/cli#preview) for the emails, where you can iterate your template, send it to yourself, see preview of plain text and so on. 
-- `pnpm emails:check` - will check your templates against [caniemail](https://www.caniemail.com/) database and show hints. 
 
 # Starter Docs
 
