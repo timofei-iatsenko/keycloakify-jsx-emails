@@ -27,9 +27,9 @@ async function getTemplates(dirPath: string) {
     // Read all items in the directory
     const items = await fs.readdir(dirPath, { withFileTypes: true });
 
-    // Filter out only files and not starting from "_"
+    // Filter out only files
     const files = items
-      .filter((item) => item.isFile() && !getBaseName(item.name).startsWith("_"))
+      .filter((item) => item.isFile())
       .map((file) => path.join(dirPath, file.name));
 
     return files;
