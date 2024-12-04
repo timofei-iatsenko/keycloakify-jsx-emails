@@ -3,7 +3,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import * as esbuild from "esbuild";
-import { EmailTemplateModule, GetMessages } from "./emails/types";
+import { GetMessages, GetSubject, GetTemplate } from "./emails/types";
 import * as propertiesParser from "properties-parser";
 
 const jsxTemplatesDir = "./emails/templates";
@@ -16,7 +16,12 @@ const i18nSourceFile = "./emails/i18n.ts";
  */
 const locales = ["en", "pl"];
 
-type EmailTemplateModuleWithPath = EmailTemplateModule & { file: string };
+type TemplateModule = {
+  getTemplate: GetTemplate;
+  getSubject: GetSubject;
+  file: string;
+};
+
 type I18nModule = { getMessages: GetMessages };
 
 /**
@@ -95,7 +100,10 @@ export async function main() {
         // todo: esbuild change the dist structure based on a common ancestor
         "templates/" + getBaseName(file) + ".js",
       )
-    ) as Promise<EmailTemplateModule>);
+    ) as Promise<{
+      getTemplate: GetTemplate;
+      getSubject: GetSubject;
+    }>);
 
     if (!module.getTemplate) {
       throw new Error(`File ${file} does not have an exported function getTemplate`);
@@ -107,7 +115,7 @@ export async function main() {
 
     console.log(`- ${file}`);
 
-    return { ...module, file } as EmailTemplateModuleWithPath;
+    return { ...module, file } as TemplateModule;
   });
 
   const i18nFileModule = await (import(
@@ -144,7 +152,7 @@ function toCamelCase(str: string) {
 
 async function renderTheme(
   themeName: string,
-  templates: EmailTemplateModuleWithPath[],
+  templates: TemplateModule[],
   i18nModule: I18nModule,
 ) {
   const emailThemeFolder = path.join(keyCloakTemplatesDir, themeName, "email");
@@ -180,7 +188,7 @@ async function renderTheme(
 }
 
 async function renderTemplate(
-  mod: EmailTemplateModuleWithPath,
+  mod: TemplateModule,
   themeName: string,
   emailThemeFolder: string,
 ) {

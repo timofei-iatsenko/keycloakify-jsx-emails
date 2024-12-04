@@ -1,3 +1,7 @@
+/**
+ * this file should be part of keycloakify integration (be in the package)
+ */
+
 export type GetTemplateProps = {
   locale: string;
   themeName: string;
@@ -13,7 +17,3 @@ export type GetMessages = (props: {
   locale: string;
   themeName: string;
 }) => Record<string, string>;
-export type EmailTemplateModule = {
-  getTemplate: GetTemplate;
-  getSubject: GetSubject;
-};

@@ -1,3 +1,7 @@
+/**
+ * this types should be part of keycloakify integration (be in the package)
+ */
+
 import { exp } from "./freemarker/expression";
 
 type UnknownObject = "object";

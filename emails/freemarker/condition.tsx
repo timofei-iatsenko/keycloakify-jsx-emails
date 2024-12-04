@@ -1,5 +1,8 @@
-/* eslint-disable lingui/no-unlocalized-strings */
-import { PropsWithChildren, Fragment } from "react";
+/**
+ * this file should be part of keycloakify integration (be in the package)
+ */
+
+import { PropsWithChildren } from "react";
 import { JsxEmailComponent } from "jsx-email";
 
 declare global {
