@@ -48,6 +48,9 @@ importers:
       '@types/node':
         specifier: ^22.9.1
         version: 22.9.1
+      '@types/properties-parser':
+        specifier: ^0.3.3
+        version: 0.3.3
       '@types/react':
         specifier: ^18.2.43
         version: 18.3.12
@@ -99,6 +102,9 @@ importers:
       prettier:
         specifier: 3.3.1
         version: 3.3.1
+      properties-parser:
+        specifier: ^0.6.0
+        version: 0.6.0
       storybook:
         specifier: ^8.1.10
         version: 8.4.5(prettier@3.3.1)
@@ -1429,6 +1435,9 @@ packages:
 
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
+
+  '@types/properties-parser@0.3.3':
+    resolution: {integrity: sha512-VZhGpE+QQ2JNbaY4B4Y2iM/jdUsq3HO75uBKLk07VT6P2Kg1aifeYL6I3RosFniSdAb4PtuH5UaY8jXU7JeIYA==}
 
   '@types/react-dom@18.3.1':
     resolution: {integrity: sha512-qW1Mfv8taImTthu4KoXgDfLuk4bydU6Q/TkADnDWWHwi4NX4BR+LWfTp2sVmTqRrsHvyDDTelgelxJ+SsejKKQ==}
@@ -3132,6 +3141,10 @@ packages:
 
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
+
+  properties-parser@0.6.0:
+    resolution: {integrity: sha512-qvr2cSmoA0dln0MARAKwBzPkkXn7FqwX+RVVNpMdMJc7rt9mqO2cXwluxtux9fHrLhjnPFaQkS8BM0kFrTCnSw==}
+    engines: {node: '>= 0.3.1'}
 
   property-information@6.5.0:
     resolution: {integrity: sha512-PgTgs/BlvHxOu8QuEN7wi5A0OmXaBcHpmCSTehcs6Uuu9IkDIEo13Hy7n898RHfrQ49vKCoGeWZSaAK01nwVig==}
@@ -5161,6 +5174,10 @@ snapshots:
 
   '@types/prop-types@15.7.13': {}
 
+  '@types/properties-parser@0.3.3':
+    dependencies:
+      '@types/node': 22.9.1
+
   '@types/react-dom@18.3.1':
     dependencies:
       '@types/react': 18.3.12
@@ -7121,6 +7138,8 @@ snapshots:
       loose-envify: 1.4.0
       object-assign: 4.1.1
       react-is: 16.13.1
+
+  properties-parser@0.6.0: {}
 
   property-information@6.5.0: {}
 

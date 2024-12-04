@@ -12,6 +12,7 @@
     "themes.ts",
     "build-emails.ts",
     "lingui.config.ts",
-    "jsx-email.config.js"
+    "jsx-email.config.js",
+    "./emails/types.ts"
   ]
 }

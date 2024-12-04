@@ -52,6 +52,8 @@ export default typescriptEslint.config(
     ...linguiPlugin.configs["flat/recommended"],
     files: ["emails/**"],
     rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
       "react-refresh/only-export-components": "off",
       "react/no-unescaped-entities": "off",
 

@@ -56,3 +56,5 @@ jspm_packages
 /build
 /storybook-static
 .idea
+
+/dist_emails

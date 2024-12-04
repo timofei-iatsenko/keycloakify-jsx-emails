@@ -1,23 +1,22 @@
 #!/usr/bin/env -S node --import @swc-node/register/esm-register
 
-import { render } from "jsx-email";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { createElement, FunctionComponent } from "react";
 import linguiConfig from "./lingui.config";
 import * as esbuild from "esbuild";
+import { EmailTemplateModule, GetMessages } from "./emails/types";
+import * as propertiesParser from "properties-parser";
 
 const jsxTemplatesDir = "./emails/templates";
-const keyCloakTemplatesDir = "./src/email";
-const esbuildOutDir = "./dist-emails";
+const keyCloakTemplatesDir = "./dist_emails";
+const esbuildOutDir = "./__dist-emails";
+const i18nSourceFile = "./emails/i18n.ts";
 
 const locales = linguiConfig.locales;
-const sourceLocale = linguiConfig.sourceLocale;
 
-type EmailTemplateFactory = FunctionComponent<{
-  themeName: string;
-  locale: string;
-}>;
+type EmailTemplateModuleWithPath = EmailTemplateModule & { file: string };
+type I18nModule = { getMessages: GetMessages };
+
 /**
  *
  * @param {string} dirPath
@@ -69,25 +68,51 @@ export async function main() {
 
   const tpls = await getTemplates(jsxTemplatesDir);
 
-  await bundle(tpls);
+  // todo: validate that i18nSourceFile file exists and throw error
+  // or make it optional?
+  await bundle([...tpls, i18nSourceFile]);
 
-  console.log(import.meta.dirname);
+  console.log(`Discovered templates:`);
   const promises = tpls.map(async (file) => {
     const module = await (import(
-      path.join(import.meta.dirname, esbuildOutDir, getBaseName(file) + ".js")
-    ) as Promise<{
-      Template: EmailTemplateFactory;
-    }>);
+      path.join(
+        import.meta.dirname,
+        esbuildOutDir,
+        // todo: esbuild change the dist structure based on a common ancestor
+        "templates/" + getBaseName(file) + ".js",
+      )
+    ) as Promise<EmailTemplateModule>);
 
-    if (!module.Template) {
-      throw new Error(`File ${file} does not have an exported name Template`);
+    if (!module.getTemplate) {
+      throw new Error(`File ${file} does not have an exported function getTemplate`);
     }
 
-    console.log(`Rendering ${file}`);
-    await renderTemplate(module.Template, file, themes);
+    if (!module.getSubject) {
+      throw new Error(`File ${file} does not have an exported function getSubject`);
+    }
+
+    console.log(`- ${file}`);
+
+    return { ...module, file } as EmailTemplateModuleWithPath;
   });
 
-  await Promise.all(promises);
+  const i18nFileModule = await (import(
+    path.join(import.meta.dirname, esbuildOutDir, getBaseName(i18nSourceFile) + ".js")
+  ) as Promise<I18nModule>);
+
+  if (!i18nFileModule.getMessages) {
+    throw new Error(
+      `File ${i18nSourceFile} does not have an exported function getMessages`,
+    );
+  }
+
+  const modules = await Promise.all(promises);
+
+  for (const themeName of themes) {
+    // i'm intentionally doing this sequentially to avoid
+    // concurrency during templates rendering
+    await renderTheme(themeName, modules, i18nFileModule);
+  }
 
   await fs.rm(esbuildOutDir, {
     recursive: true,
@@ -99,73 +124,71 @@ export async function main() {
 
 main();
 
-function buildFtlEntryPoint(templateName: string, locales: string[]) {
-  // choose template based on locale, fallback to source locale if locale is not supported
-  return `
-<#switch locale>
-${locales
-  .filter((locale) => locale !== sourceLocale)
-  .map((locale) =>
-    `
-  <#case "${locale}">
-    <#include "./" + xKeycloakify.themeName + "/${locale}/${templateName}">
-    <#break>
-`.trim(),
-  )
-  .join("\n")}
-  <#default>
-    <#include "./" + xKeycloakify.themeName + "/${sourceLocale}/${templateName}">  
-</#switch> 
-`.trim();
+function toCamelCase(str: string) {
+  return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+}
+
+async function renderTheme(
+  themeName: string,
+  templates: EmailTemplateModuleWithPath[],
+  i18nModule: I18nModule,
+) {
+  const emailThemeFolder = path.join(keyCloakTemplatesDir, themeName, "email");
+
+  for (const mod of templates) {
+    await renderTemplate(mod, themeName, emailThemeFolder);
+  }
+
+  for (const locale of locales) {
+    const messages: Record<string, string> = i18nModule.getMessages({
+      locale,
+      themeName,
+    });
+
+    for (const mod of templates) {
+      messages[toCamelCase(getBaseName(mod.file)) + "Subject"] = await mod.getSubject({
+        locale,
+        themeName,
+      });
+    }
+
+    await writePropertiesFile(
+      path.join(emailThemeFolder, "messages"),
+      `messages_${locale}.properties`,
+      messages,
+    );
+  }
+
+  await writePropertiesFile(emailThemeFolder, "theme.properties", {
+    parent: "base",
+    locales: locales.join(","),
+  });
 }
 
 async function renderTemplate(
-  Template: EmailTemplateFactory,
-  filePath: string,
-  themes: string[],
+  mod: EmailTemplateModuleWithPath,
+  themeName: string,
+  emailThemeFolder: string,
 ) {
-  const freemarkerName = getBaseName(filePath) + ".ftl";
-
-  const entryPointContent = buildFtlEntryPoint(freemarkerName, locales);
+  const ftlName = getBaseName(mod.file) + ".ftl";
+  const entryPointContent = `<#include "./" + locale + "/${ftlName}">`;
 
   // write ftl html entrypoint
-  await writeFile(
-    path.join(keyCloakTemplatesDir, "html"),
-    freemarkerName,
-    entryPointContent,
-  );
+  await writeFile(path.join(emailThemeFolder, "html"), ftlName, entryPointContent);
 
   // write ftl text entrypoint
-  await writeFile(
-    path.join(keyCloakTemplatesDir, "text"),
-    freemarkerName,
-    entryPointContent,
-  );
+  await writeFile(path.join(emailThemeFolder, "text"), ftlName, entryPointContent);
 
   for (const locale of locales) {
-    for (const themeName of themes) {
-      const html = await render(createElement(Template, { themeName, locale }), {
-        pretty: true,
+    for (const type of ["html", "text"] as const) {
+      const html = await mod.getTemplate({
+        themeName,
+        locale,
+        plainText: type === "text",
       });
 
-      const plainText = await render(createElement(Template, { themeName, locale }), {
-        plainText: true,
-        pretty: true,
-      });
-
-      // write html version for template
-      await writeFile(
-        path.join(keyCloakTemplatesDir, "html", themeName, locale),
-        freemarkerName,
-        html,
-      );
-
-      // write text version for template
-      await writeFile(
-        path.join(keyCloakTemplatesDir, "text", themeName, locale),
-        freemarkerName,
-        plainText,
-      );
+      // write ftl file
+      await writeFile(path.join(emailThemeFolder, type, locale), ftlName, html);
     }
   }
 }
@@ -175,6 +198,18 @@ async function writeFile(filePath: string, filename: string, content: string) {
   await fs.writeFile(path.join(filePath, filename), content);
 }
 
+async function writePropertiesFile(
+  path: string,
+  filename: string,
+  properties: Record<string, string>,
+) {
+  const editor = propertiesParser.createEditor();
+  for (const [key, value] of Object.entries(properties)) {
+    editor.set(key, value);
+  }
+
+  await writeFile(path, filename, editor.toString());
+}
 /**
  * get a basename (filename) from a pth without an extension
  * @param filePath
