@@ -8,7 +8,7 @@ import * as propertiesParser from "properties-parser";
 
 const jsxTemplatesDir = "./emails/templates";
 const keyCloakTemplatesDir = "./dist_emails";
-const esbuildOutDir = "./__dist-emails";
+const esbuildOutDir = "./.temp-emails";
 const i18nSourceFile = "./emails/i18n.ts";
 
 /**
