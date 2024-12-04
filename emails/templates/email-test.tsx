@@ -1,8 +1,6 @@
 import { Text } from "jsx-email";
 import { EmailLayout } from "../layout";
-import { GetTemplateProps, GetSubject, GetTemplate } from "../types";
-import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { GetSubject, GetTemplate, GetTemplateProps } from "../types";
 import { createVariablesHelper } from "../email-vars";
 import { createElement } from "react";
 import { render } from "../render";
@@ -26,10 +24,8 @@ export const templateName = "Email Test";
 const { exp } = createVariablesHelper("email-test.ftl");
 
 export const Template = ({ locale }: TemplateProps) => (
-  <EmailLayout preview={t`Here is a preview`} locale={locale}>
-    <Text style={paragraph}>
-      <Trans>This is a test message from {exp("realmName")}</Trans>
-    </Text>
+  <EmailLayout preview={"Here is a preview"} locale={locale}>
+    <Text style={paragraph}>This is a test message from {exp("realmName")}</Text>
   </EmailLayout>
 );
 

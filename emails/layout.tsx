@@ -1,25 +1,22 @@
-import { Body, Container, Head, Html, Preview, Section } from 'jsx-email'
-import { PropsWithChildren, ReactNode } from 'react'
-import { LinguiEmailProvider } from './i18n/provider'
+import { Body, Container, Head, Html, Preview, Section } from "jsx-email";
+import { PropsWithChildren, ReactNode } from "react";
 
-/* eslint-disable lingui/no-unlocalized-strings */
 const main = {
-  backgroundColor: '#f6f9fc',
+  backgroundColor: "#f6f9fc",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-}
+};
 
 const container = {
-  backgroundColor: '#ffffff',
-  margin: '0 auto',
-  marginBottom: '64px',
-  padding: '20px 0 48px',
-}
+  backgroundColor: "#ffffff",
+  margin: "0 auto",
+  marginBottom: "64px",
+  padding: "20px 0 48px",
+};
 
 const box = {
-  padding: '0 48px',
-}
-/* eslint-enable lingui/no-unlocalized-strings */
+  padding: "0 48px",
+};
 
 export const EmailLayout = ({
   locale,
@@ -31,12 +28,10 @@ export const EmailLayout = ({
       <Head />
       <Preview>{preview}</Preview>
       <Body style={main}>
-        <LinguiEmailProvider locale={locale}>
-          <Container style={container}>
-            <Section style={box}>{children}</Section>
-          </Container>
-        </LinguiEmailProvider>
+        <Container style={container}>
+          <Section style={box}>{children}</Section>
+        </Container>
       </Body>
     </Html>
-  )
-}
+  );
+};

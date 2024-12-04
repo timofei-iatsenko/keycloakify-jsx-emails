@@ -2,7 +2,6 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import linguiConfig from "./lingui.config";
 import * as esbuild from "esbuild";
 import { EmailTemplateModule, GetMessages } from "./emails/types";
 import * as propertiesParser from "properties-parser";
@@ -12,7 +11,10 @@ const keyCloakTemplatesDir = "./dist_emails";
 const esbuildOutDir = "./__dist-emails";
 const i18nSourceFile = "./emails/i18n.ts";
 
-const locales = linguiConfig.locales;
+/**
+ * Assume this one should be taken from vite keycloakify config
+ */
+const locales = ["en", "pl"];
 
 type EmailTemplateModuleWithPath = EmailTemplateModule & { file: string };
 type I18nModule = { getMessages: GetMessages };
@@ -39,16 +41,27 @@ async function getTemplates(dirPath: string) {
 }
 
 async function getThemes() {
+  /**
+   * Assume defined themes should be taken from vite keycloakify config
+   */
   const { default: themes } = await import("./themes");
 
   return themes;
 }
 
 async function bundle(entryPoints: string[]) {
+  // Assume that config of esbuild would be overridable via keycloackify settings
+  // similarly to how it's configurable in jsx-email
+  // when this code would be incorporated into keycloackify jsx-email config
+  // shouldn't be there, because we want a framework-agnostic solution
   const { config: loadConfig } = await import("./jsx-email.config.js");
 
   const config = await loadConfig;
 
+  // we have to use a bundler to preprocess templates code
+  // It's better to not use the same bundling configuration used for the
+  // frontend theme, because for email templates there might be a different
+  // transpiling settings, such as other jsx-pragma or additional transpilation plugins,
   await esbuild.build({
     entryPoints: entryPoints,
     bundle: true,
@@ -58,6 +71,7 @@ async function bundle(entryPoints: string[]) {
     packages: "external",
     format: "esm",
     target: "node20",
+
     ...config.esbuild,
   });
 }

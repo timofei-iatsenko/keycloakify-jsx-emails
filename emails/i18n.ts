@@ -1,5 +1,9 @@
 import { GetMessages } from "./types";
 
+/**
+ * we want to have this as function with a params, to give developers a
+ * flexibility to initialize theirs own i18n solution here
+ */
 export const getMessages: GetMessages = (props) => {
   // this default properties are optional, if you omit them, they will be taken from a base theme
   return {
