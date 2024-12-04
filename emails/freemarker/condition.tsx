@@ -1,4 +1,29 @@
-import { PropsWithChildren } from 'react'
+/* eslint-disable lingui/no-unlocalized-strings */
+import { PropsWithChildren, Fragment } from "react";
+import { JsxEmailComponent } from "jsx-email";
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    interface IntrinsicElements {
+      // magic custom element post-processed in render function
+      "jsx-email-raw": React.DetailedHTMLProps<React.HTMLProps<HTMLElement>, HTMLElement>;
+    }
+  }
+}
+
+export interface RawOutputProps {
+  content?: string;
+}
+
+// JSX Emails is escaping  a proper freemarker syntax <#if>
+// We use a comment-style syntax <!--#if --> and then replace it
+// back to freemarker after render
+export const RawOutput: JsxEmailComponent<RawOutputProps> = (props) => (
+  <>
+    <jsx-email-raw dangerouslySetInnerHTML={{ __html: `<!-- ${props.content} -->` }} />
+  </>
+);
 
 /**
  * JSX helper to write a freemarker conditions
@@ -27,34 +52,30 @@ import { PropsWithChildren } from 'react'
  * </If>
  * ```
  */
-
-export const If = ({
-  condition,
-  children,
-}: PropsWithChildren<{ condition: string }>) => (
+export const If = ({ condition, children }: PropsWithChildren<{ condition: string }>) => (
   <>
-    {`<#if ${condition}>`}
+    <RawOutput content={`<#if ${condition}>`} />
     {children}
-    {'</#if>'}
+    <RawOutput content="</#if>" />
   </>
-)
+);
 export const Then = ({ children }: PropsWithChildren) => {
-  return children
-}
+  return children;
+};
 
 export const Else = ({ children }: PropsWithChildren) => (
   <>
-    {`<#else>`}
+    <RawOutput content="<#else>"></RawOutput>
     {children}
   </>
-)
+);
 
 export const ElseIf = ({
   condition,
   children,
 }: PropsWithChildren<{ condition: string }>) => (
   <>
-    {`<#elseif ${condition}>`}
+    <RawOutput content={`<#elseif ${condition}>`}></RawOutput>
     {children}
   </>
-)
+);

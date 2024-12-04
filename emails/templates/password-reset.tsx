@@ -1,12 +1,13 @@
-import { render, Text } from "jsx-email";
+import { Text } from "jsx-email";
 import { EmailLayout } from "@/layout";
 import { GetTemplateProps, GetSubject, GetTemplate } from "../types";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { createVariablesHelper } from "../email-vars";
 import { createElement } from "react";
+import { render } from "../render";
 
-interface TemplateProps extends GetTemplateProps {}
+interface TemplateProps extends Omit<GetTemplateProps, "plainText"> {}
 
 const paragraph = {
   color: "#777",
@@ -24,7 +25,7 @@ export const templateName = "Password Reset";
 
 const { exp } = createVariablesHelper("password-reset.ftl");
 
-export const Template = ({ locale }: GetTemplateProps) => (
+export const Template = ({ locale }: TemplateProps) => (
   <EmailLayout preview={t`Here is a preview`} locale={locale}>
     <Text style={paragraph}>
       <Trans>
@@ -47,10 +48,7 @@ export const Template = ({ locale }: GetTemplateProps) => (
   </EmailLayout>
 );
 export const getTemplate: GetTemplate = async (props) => {
-  return await render(createElement(Template, props), {
-    pretty: true,
-    plainText: props.plainText,
-  });
+  return await render(createElement(Template, props), props.plainText);
 };
 
 export const getSubject: GetSubject = async (_props) => {

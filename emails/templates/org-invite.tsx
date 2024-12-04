@@ -1,4 +1,4 @@
-import { render, Text } from "jsx-email";
+import { Text } from "jsx-email";
 import { EmailLayout } from "@/layout";
 import { GetTemplateProps, GetSubject, GetTemplate } from "../types";
 import { Trans } from "@lingui/react/macro";
@@ -6,6 +6,7 @@ import * as Fm from "../freemarker/condition";
 import { t } from "@lingui/core/macro";
 import { createVariablesHelper } from "../email-vars";
 import { createElement } from "react";
+import { render } from "../render";
 
 interface TemplateProps extends Omit<GetTemplateProps, "plainText"> {}
 
@@ -54,10 +55,7 @@ export const Template = ({ locale }: TemplateProps) => (
 );
 
 export const getTemplate: GetTemplate = async (props) => {
-  return await render(createElement(Template, props), {
-    pretty: true,
-    plainText: props.plainText,
-  });
+  return await render(createElement(Template, props), props.plainText);
 };
 
 export const getSubject: GetSubject = async (_props) => {

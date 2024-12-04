@@ -1,2 +1,1 @@
-export const exp = <T = never>(name: T, sanitize = true) =>
-  sanitize ? '${kcSanitize(' + name + ')?no_esc}' : '${' + name + '}'
+export const exp = <T = never>(name: T) => "${" + name + "}";

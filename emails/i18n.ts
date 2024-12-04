@@ -1,6 +1,7 @@
 import { GetMessages } from "./types";
 
 export const getMessages: GetMessages = (props) => {
+  // this default properties are optional, if you omit them, they will be taken from a base theme
   return {
     "requiredAction.CONFIGURE_TOTP": "Configure OTP",
     "requiredAction.TERMS_AND_CONDITIONS": "Terms and Conditions",
