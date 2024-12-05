@@ -79,8 +79,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2(@jsx-email/plugin-inline@1.0.1)(@jsx-email/plugin-minify@1.0.1)(@jsx-email/plugin-pretty@1.0.0)(@types/node@22.9.1)(@types/react-dom@18.3.1)(@types/react@18.3.12)(react@18.3.1)(typescript@5.6.3)
       keycloakify-emails:
-        specifier: ^1.0.3
-        version: 1.0.3(jsx-email@2.4.2)(react@18.3.1)
+        specifier: ^1.1.1
+        version: 1.1.1(jsx-email@2.4.2)(react@18.3.1)
       prettier:
         specifier: 3.3.1
         version: 3.3.1
@@ -2525,8 +2525,8 @@ packages:
       '@jsx-email/plugin-pretty': ^1.0.0
       react: ^18.2.0
 
-  keycloakify-emails@1.0.3:
-    resolution: {integrity: sha512-mStdJ+LrfcmR4kymewgUnGcrZvE/kQLMandujgYYVGc145MPSoZMd8YqkGoCxZbE7/PAbR8ES8AemHHzqvArwg==}
+  keycloakify-emails@1.1.1:
+    resolution: {integrity: sha512-ywdqNvR8jKbDtPyBDtMOhXRQrfsDjotbiNxCFi5f3tBxCxNFeJNdS1IO8SuujwwxzDeu2N4BjiE208WiMvd7mQ==}
     peerDependencies:
       jsx-email: ^2.4.2
       react: ^18.0.0
@@ -6120,7 +6120,7 @@ snapshots:
       - ts-node
       - typescript
 
-  keycloakify-emails@1.0.3(jsx-email@2.4.2)(react@18.3.1):
+  keycloakify-emails@1.1.1(jsx-email@2.4.2)(react@18.3.1):
     dependencies:
       esbuild: 0.24.0
       properties-parser: 0.6.0
