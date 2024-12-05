@@ -7,11 +7,5 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "vite.config.ts",
-    "themes.ts",
-    "build-email-template.ts",
-    "jsx-email.config.js",
-    "./emails/types.ts"
-  ]
+  "include": ["vite.config.ts", "themes.ts", "jsx-email.config.js"]
 }

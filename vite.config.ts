@@ -1,15 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { keycloakify } from "keycloakify/vite-plugin";
-import themes from "./themes";
-import { buildEmailTheme } from "./build-email-template";
+import { buildEmailTheme } from "keycloakify-emails";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     keycloakify({
-      themeName: themes,
+      themeName: ["vanilla", "chocolate"],
       accountThemeImplementation: "none",
       postBuild: async (buildContext) => {
         // Assume that config of esbuild would be overridable via keycloackify settings

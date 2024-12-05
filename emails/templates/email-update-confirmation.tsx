@@ -1,10 +1,12 @@
 import { Text } from "jsx-email";
-import { EmailLayout } from "@/layout";
-import { GetTemplateProps, GetSubject, GetTemplate } from "../types";
-import { createVariablesHelper } from "../email-vars";
-import { createElement } from "react";
-import { render } from "../render";
-
+import { EmailLayout } from "../layout";
+import { render } from "keycloakify-emails/jsx-email";
+import {
+  GetSubject,
+  GetTemplate,
+  GetTemplateProps,
+  createVariablesHelper,
+} from "keycloakify-emails";
 interface TemplateProps extends Omit<GetTemplateProps, "plainText"> {}
 
 const paragraph = {
@@ -44,7 +46,7 @@ export const Template = ({ locale }: TemplateProps) => (
 );
 
 export const getTemplate: GetTemplate = async (props) => {
-  return await render(createElement(Template, props), props.plainText);
+  return await render(<Template {...props} />, props.plainText);
 };
 
 export const getSubject: GetSubject = async (_props) => {
