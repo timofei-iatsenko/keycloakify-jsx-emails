@@ -10,7 +10,7 @@
   "include": [
     "vite.config.ts",
     "themes.ts",
-    "build-emails.ts",
+    "build-email-template.ts",
     "jsx-email.config.js",
     "./emails/types.ts"
   ]

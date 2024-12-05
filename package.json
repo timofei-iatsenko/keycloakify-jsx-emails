@@ -10,11 +10,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build-keycloak-theme": "pnpm build && pnpm emails:build && keycloakify build",
+    "build-keycloak-theme": "pnpm build && keycloakify build",
     "storybook": "storybook dev -p 6006",
     "format": "prettier . --write",
-    "emails:build": "./build-emails.ts",
-    "emails:build-preview": "pnpm emails:preview --build-path /tmp/email-preview",
     "emails:check": "email check ./emails/templates",
     "emails:preview": "email preview ./emails/templates"
   },
